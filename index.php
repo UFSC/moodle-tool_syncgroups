@@ -21,63 +21,77 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require("{$CFG->wwwroot}/group/lib.php");
-require("{$CFG->wwwroot}/local/syncgroups/locallib.php");
+require('../../config.php');
+require("{$CFG->dirroot}/group/lib.php");
+require("{$CFG->dirroot}/local/syncgroups/lib.php");
+require("{$CFG->dirroot}/local/syncgroups/ui/renderer.php");
+require("{$CFG->dirroot}/local/syncgroups/ui/components.php");
 
-if(!$sincronizacao = obtem_sincronizacao($argv[1])) {
-     die;
-}
-if(!isset($sincronizacao->contexto)) {
-     echo "??? Não informado o contexto no arquivo de configuração da sinronização\n";
-     die;
-}
-$contexto = $sincronizacao->contexto;
-$www_dir = "/home/moodle/public_html/{$contexto}";
-$config = "{$www_dir}/config.php";
-if(!is_readable($config)) {
-     echo "??? Não localizado ou sem permissão de leitura ao arquivo de configuração do Moodle: '{$config}'\n";
-     die;
-}
+$courseid = required_param('courseid', PARAM_INT);
+$groups = optional_param_array('groups', 0, PARAM_INT);
+$destinations = optional_param_array('destinations', 0, PARAM_INT);
 
-include($config);
-include("{$www_dir}/group/lib.php");
-$CFG->debug = DEBUG_DEVELOPER;
+$course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 
-foreach($sincronizacao->sincronizacoes AS $sinc) {
-    echo "\n----------------------------------------------------------\n";
+$url = new moodle_url('/local/syncgroups/index.php', array('courseid'=>$courseid));
 
-    $erro = false;
-    echo "Curso de origem:\n";
-    if($corigem = obtem_curso($sinc->origem)) {
-        echo "Grupos:\n";
-        if(!$grupos = obtem_grupos_curso($corigem->id, $sinc->grupos)) {
-            $erro = true;
-        }
-    } else {
-        $erro = true;
-    }
+$PAGE->set_url($url);
 
-    $cdestinos = array();
-    echo "Cursos de destino:\n";
-    foreach($sinc->destinos AS $dest) {
-        if($cdest = obtem_curso($dest)) {
-            $cdestinos[] = $cdest;
+// Make sure that the user has permissions to manage groups.
+require_login($course);
+
+$context = context_course::instance($course->id);
+require_capability('moodle/course:managegroups', $context);
+
+if (!empty($groups) && !empty($destinations)) {
+
+        $erro = false;
+        if ($origem = get_course($courseid)) {
+
+            $coursegroups = $DB->get_records_menu('groups', array('courseid'=>$courseid), 'name', 'id, name');
+
+            foreach ($groups as $groupid) {
+
+                if (!isset($coursegroups[$groupid])) {
+                    $erro = true;
+                }
+            }
         } else {
             $erro = true;
         }
-    }
 
-    if($erro) {
-        echo "\n**** Sincronização cancelada em função de erros ...\n";
-        echo "\n**** Pressione <enter> para prosseguir ...\n";
-        fgets(STDIN);
-    } else {
-        echo "\nSincronizar estes grupos? [s/n]: ";
-        $ok = fgets(STDIN);
-        if(!empty($ok) && $ok[0] == 's') {
-            sincroniza_grupos($grupos, $cdestinos);
-        } else {
-            echo "\n**** Sincronização cancelada pelo operador ...\n";
+        $cdestinos = array();
+        foreach($destinations AS $dest) {
+            if ($cdest = get_course($dest)) {
+                $cdestinos[] = $cdest;
+            } else {
+                $erro = true;
+            }
         }
-    }
+
+        if ($erro) {
+            echo "\n**** Sincronização cancelada em função de erros ...\n";
+        } else {
+            // todo: tela de confirmação de ação?
+            local_syncgroups_do_sync($groups, $cdestinos);
+            // todo: redirect to start page
+        }
+} else {
+
+    // Print the page and form
+    $strsyncgroups = get_string('pluginname', 'local_syncgroups');
+
+    /// Print header
+    $PAGE->set_title($strsyncgroups);
+    $PAGE->set_heading($course->fullname);
+    $PAGE->set_pagelayout('standard');
+
+    echo $OUTPUT->header();
+
+    $search = new destination_courses_search(array('url'=>$url));
+
+    $renderer = $PAGE->get_renderer('local_syncgroups');
+    echo $renderer->destination_courses_selector($url, $search, $courseid);
+
+    echo $OUTPUT->footer();
 }

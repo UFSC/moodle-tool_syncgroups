@@ -21,14 +21,37 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-function sincroniza_grupos($grupos, $cdestinos) {
+require_once($CFG->libdir . '/formslib.php');
+
+function local_syncgroups_extends_settings_navigation(settings_navigation $nav, context $context = null) {
+    global $PAGE;
+
+    // Only add this settings item on non-site course pages.
+    if (!$PAGE->course or $PAGE->course->id == 1) {
+        return;
+    }
+    if ($coursenode = $nav->get('courseadmin')) {
+
+        if ($usersnode = $coursenode->get('users')) {
+
+            $str = get_string('pluginname', 'local_syncgroups');
+            $url = new moodle_url('/local/syncgroups/index.php', array('courseid' => $context->instanceid));
+            $node = navigation_node::create($str, $url, navigation_node::NODETYPE_LEAF, 'local_syncgroups', 'local_syncgroups');
+
+            if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
+                $node->make_active();
+            }
+            $usersnode->add_node($node, 'override');
+        }
+    }
+}
+
+function local_syncgroups_do_sync($grupos, $cdestinos) {
     global $DB;
 
-    foreach($grupos AS $grp) {
-        echo "\n----------------------------------------------------------------------\n";
-        echo "Processando grupo: {$grp->id} - {$grp->name}\n";
+    foreach ($grupos as $groupid => $groupname) {
 
-        if (!$members = $DB->get_records('groups_members', array('groupid'=>$grp->id), '', 'id, groupid, userid')) {
+        if (!$members = $DB->get_records('groups_members', array('groupid'=>$groupid), '', 'id, groupid, userid')) {
             echo "\t?? grupo vazio. Pulando ....";
             continue;
         }
@@ -39,7 +62,7 @@ function sincroniza_grupos($grupos, $cdestinos) {
         }
 
         foreach($cdestinos AS $cdest) {
-            if ($dgr = $DB->get_record('groups', array('courseid'=>$cdest->id, 'name'=>$grp->name), 'id, courseid, idnumber, name')) {
+            if ($dgr = $DB->get_record('groups', array('courseid'=>$cdest->id, 'name'=>$groupname), 'id, courseid, idnumber, name')) {
                 echo "   -- sincronizando em: {$cdest->shortname}\n";
             } else {
                 echo "   -- criando grupo em: {$cdest->shortname}\n";
@@ -47,9 +70,9 @@ function sincroniza_grupos($grupos, $cdestinos) {
                 $dgr->courseid     = $cdest->id;
                 $dgr->timecreated  = time();
                 $dgr->timemodified = $dgr->timecreated;
-                $dgr->name         = $grp->name;
-                $dgr->description  = $grp->description;
-                $dgr->descriptionformat = $grp->descriptionformat;
+                $dgr->name         = $groupname;
+               // $dgr->description  = $grp->description;
+               // $dgr->descriptionformat = $grp->descriptionformat;
                 $dgr->id = $DB->insert_record('groups', $dgr);
                 if(empty($dgr->id)) {
                     echo "?? erro ao criar grupo\n";
@@ -81,133 +104,3 @@ function sincroniza_grupos($grupos, $cdestinos) {
         }
     }
 }
-
-function obtem_curso($shortname) {
-    global $DB;
-
-    if ($course = $DB->get_record('course', array('shortname'=>$shortname), 'id, shortname, fullname')) {
-        if ($ctx_id = $DB->get_field('context', 'id', array('contextlevel'=>50, 'instanceid'=>$course->id))) {
-            $course->contextid = $ctx_id;
-            echo "\tcurso: {$course->id} - {$course->fullname}\n";
-            return $course;
-        } else {
-            echo "\t?? erro ao buscar contexto do curso: {$shortname}\n";
-            return false;
-        } 
-    } else {
-        echo "\t?? Curso não localizado: {$shortname}\n";
-        return false;
-    }
-}
-
-function obtem_grupos_curso($courseid, $grupos=array()) {
-    global $DB;
-
-    $erro = false;
-    if ($grupos_orig = $DB->get_records('groups', array('courseid'=>$courseid), 'name', 'id, name, description, descriptionformat')) {
-        $grp_localizados = array();
-        $grp_descartados = array();
-        foreach($grupos_orig AS $grp_id=>$grp) {
-            if(empty($grupos) || in_array($grp->name, $grupos)) {
-                $grp_localizados[] = $grp->name;
-                echo "\t{$grp->id} - {$grp->name}\n";
-            } else {
-                $grp_descartados[] = $grp->name;
-                unset($grupos_orig[$grp_id]);
-            }
-        }
-        $grupos = array_diff($grupos, $grp_localizados);
-        if(!empty($grupos)) {
-            foreach($grupos AS $g) {
-                echo "\t?? Grupo: '{$g}' não localizado no curso de origem\n";
-                $erro = true;
-            }
-            if($erro && count($grp_descartados) > 0) {
-                echo "\tOutros grupos do curso de origem:\n";
-                foreach($grp_descartados AS $g) {
-                    echo "\t\t'{$g}'\n";
-                }
-            }
-        }
-    } else {
-        echo "\t?? Não foram localizados grupos no curso de origem.\n";
-        $erro = true;
-    }
-    if($erro) {
-        return false;
-    } else {
-        return $grupos_orig;
-    }
-}
-
-function obtem_sincronizacao($conf) {
-    if(!is_readable($conf)) {
-         echo "??? Não localizado ou sem permissão de leitura ao arquivo de configuração da sincronização: '{$conf}'\n";
-         return false;
-    }
-    $sincs = new stdClass;
-    $sincs->contexto = '';
-    $sincs->sincronizacoes = array();
-
-    $texto = file_get_contents($conf);
-    $pattern = '|\[([a-z]+)\]([^\[]+)|';
-    preg_match_all($pattern, $texto, $matches);
-
-    $titulos = $matches[1];
-    $valores = $matches[2];
-
-    $sinc = new stdClass;
-    foreach($titulos AS $i=>$tit) {
-        switch ($tit) {
-           case 'contexto' :
-                $sincs->contexto = trim($valores[$i], " \n");
-                break;
-           case 'origem' :
-                if(isset($sinc->origem)) {
-                    echo "\tOrigem sem correspondentes destinos: '{$sinc->origem}'\n";
-                    return false;
-                }
-                $sinc->origem = trim($valores[$i], " \n");
-                $sinc->grupos = array();
-                break;
-           case 'grupos' :
-                if(!isset($sinc->origem)) {
-                    echo "\tGrupos sem correspondente origem: '{$valores[$i]}'\n";
-                    return false;
-                }
-                $sinc->grupos = separa_itens($valores[$i]);
-                break;
-           case 'destinos' :
-                $destinos = explode("\n", $valores[$i]);
-                if(!isset($sinc->origem)) {
-                    echo "\tDestinos sem correspondente origem: '{$valores[$i]}'\n";
-                    return false;
-                }
-                if(isset($sinc->destinos)) {
-                    echo "\tDestinos sem correspondente origem: '{" . implode("\n", $sinc->destinos) . "}'\n";
-                    return false;
-                }
-                $sinc->destinos = separa_itens($valores[$i]);
-                $sincs->sincronizacoes[] = $sinc;
-                $sinc = new stdClass;
-                break;
-           default:
-                echo "\tTipo inválido para seção na configuração: '{$tit}'\n";
-                return false;
-        }
-    }
-    return $sincs;
-}
-
-function separa_itens($string) {
-    $linhas = explode("\n", $string);
-    $itens = array();
-    foreach($linhas AS $l) {
-        $lp = trim($l, " \n");
-        if(!empty($lp) && $l[0] != '#') {
-            $itens[] = $l;
-        }
-    }
-    return $itens;
-}
-

@@ -22,3 +22,6 @@
  */
 
 $string['pluginname'] = 'Synchronize groups';
+$string['syncgroupsto'] = 'Select courses to synchronize to';
+$string['selectgroups'] = 'Select groups you want to synchronize';
+$string['sync'] = 'Sinchronize';
