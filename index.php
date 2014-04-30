@@ -30,6 +30,7 @@ require("{$CFG->dirroot}/local/syncgroups/ui/components.php");
 $courseid = required_param('courseid', PARAM_INT);
 $groups = optional_param_array('groups', 0, PARAM_INT);
 $destinations = optional_param_array('destinations', 0, PARAM_INT);
+$searchcourses = optional_param('searchcourses', false, PARAM_BOOL);
 
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 
@@ -43,55 +44,53 @@ require_login($course);
 $context = context_course::instance($course->id);
 require_capability('moodle/course:managegroups', $context);
 
-if (!empty($groups) && !empty($destinations)) {
+// Print the page and form
+$strsyncgroups = get_string('pluginname', 'local_syncgroups');
+
+/// Print header
+$PAGE->set_title($strsyncgroups);
+$PAGE->set_heading($course->fullname);
+$PAGE->set_pagelayout('standard');
+
+echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('pluginname', 'local_syncgroups'));
+
+if (!$searchcourses && !empty($groups) && !empty($destinations)) {
 
         $erro = false;
         if ($origem = get_course($courseid)) {
 
-            $coursegroups = $DB->get_records_menu('groups', array('courseid'=>$courseid), 'name', 'id, name');
-
-            foreach ($groups as $groupid) {
-
-                if (!isset($coursegroups[$groupid])) {
-                    $erro = true;
-                }
+            list($in_or_equal, $groupparams) = $DB->get_in_or_equal($groups);
+            if (!$groups_to_sync = $DB->get_records_select('groups', "courseid = ? AND id {$in_or_equal}",
+                                                      array_merge(array($courseid),$groupparams))) {
+                $erro = true;
             }
         } else {
             $erro = true;
         }
 
-        $cdestinos = array();
-        foreach($destinations AS $dest) {
+        $courses_to_sync = array();
+        foreach($destinations as $dest) {
             if ($cdest = get_course($dest)) {
-                $cdestinos[] = $cdest;
+                $cdest->context = context_course::instance($dest);
+                $courses_to_sync[] = $cdest;
             } else {
                 $erro = true;
             }
         }
 
         if ($erro) {
-            echo "\n**** Sincronização cancelada em função de erros ...\n";
+            print_error('something went wrong');
         } else {
-            // todo: tela de confirmação de ação?
-            local_syncgroups_do_sync($groups, $cdestinos);
-            // todo: redirect to start page
+            $trace = new html_list_progress_trace();
+            local_syncgroups_do_sync($groups_to_sync, $courses_to_sync, $trace);
+            echo html_writer::link($url, get_string('back'));
         }
 } else {
 
-    // Print the page and form
-    $strsyncgroups = get_string('pluginname', 'local_syncgroups');
-
-    /// Print header
-    $PAGE->set_title($strsyncgroups);
-    $PAGE->set_heading($course->fullname);
-    $PAGE->set_pagelayout('standard');
-
-    echo $OUTPUT->header();
-
-    $search = new destination_courses_search(array('url'=>$url));
+    $search = new destination_courses_search(array('url'=>$url), $courseid);
 
     $renderer = $PAGE->get_renderer('local_syncgroups');
     echo $renderer->destination_courses_selector($url, $search, $courseid);
-
-    echo $OUTPUT->footer();
 }
+echo $OUTPUT->footer();

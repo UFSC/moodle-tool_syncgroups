@@ -89,10 +89,14 @@ class local_syncgroups_renderer extends core_backup_renderer {
 
         $html .= html_writer::start_tag('div', array('class'=>'ics-existing-group backup-section'));
         $html .= $this->output->heading(get_string('selectgroups', 'local_syncgroups'), 2, array('class'=>'header'));
+        $html .= html_writer::start_tag('ul');
         $groups = groups_get_all_groups($courseid, 0, 0, 'g.id, g.name');
         foreach ($groups as $group) {
-            $html .= html_writer::checkbox('groups[]', $group->id, false, $group->name);
+            $html .= html_writer::start_tag('li').
+                     html_writer::checkbox('groups[]', $group->id, false, $group->name).
+                     html_writer::end_tag('li');
         }
+        $html .= html_writer::end_tag('ul');
         $html .= html_writer::end_tag('div');
 
         // We only allow import adding for now. Enforce it here.

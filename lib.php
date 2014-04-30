@@ -21,6 +21,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once($CFG->dirroot . '/group/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
 function local_syncgroups_extends_settings_navigation(settings_navigation $nav, context $context = null) {
@@ -46,61 +47,59 @@ function local_syncgroups_extends_settings_navigation(settings_navigation $nav, 
     }
 }
 
-function local_syncgroups_do_sync($grupos, $cdestinos) {
+function local_syncgroups_do_sync($groups, $destinations, $trace) {
     global $DB;
 
-    foreach ($grupos as $groupid => $groupname) {
+    foreach ($groups as $group) {
 
-        if (!$members = $DB->get_records('groups_members', array('groupid'=>$groupid), '', 'id, groupid, userid')) {
-            echo "\t?? grupo vazio. Pulando ....";
+        $trace->output('Grupo: '.$group->name);
+
+        if (!$members = $DB->get_records_menu('groups_members', array('groupid'=>$group->id), '', 'userid, id')) {
+            $trace->output('group with no members, skipping');
             continue;
         }
 
-        $userids_members = array();
-        foreach($members AS $id=>$m) {
-            $userids_members[$m->userid] = $id;
-        }
+        foreach($destinations as $dest) {
 
-        foreach($cdestinos AS $cdest) {
-            if ($dgr = $DB->get_record('groups', array('courseid'=>$cdest->id, 'name'=>$groupname), 'id, courseid, idnumber, name')) {
-                echo "   -- sincronizando em: {$cdest->shortname}\n";
+            $trace->output("Curso: {$dest->shortname}");
+            if ($dgr = $DB->get_record('groups', array('courseid'=>$dest->id, 'name'=>$group->name), 'id, courseid, idnumber, name')) {
+                $trace->output('grupo existente');
             } else {
-                echo "   -- criando grupo em: {$cdest->shortname}\n";
-                unset($dgr);
-                $dgr->courseid     = $cdest->id;
+                $trace->output("criado grupo");
+                $dgr = new Stdclass();
+                $dgr->courseid     = $dest->id;
                 $dgr->timecreated  = time();
                 $dgr->timemodified = $dgr->timecreated;
-                $dgr->name         = $groupname;
-               // $dgr->description  = $grp->description;
-               // $dgr->descriptionformat = $grp->descriptionformat;
-                $dgr->id = $DB->insert_record('groups', $dgr);
-                if(empty($dgr->id)) {
-                    echo "?? erro ao criar grupo\n";
-                    exit;
+                $dgr->name         = $group->name;
+                $dgr->description  = $group->description;
+                $dgr->descriptionformat = $group->descriptionformat;
+                if (!$dgr->id = groups_create_group($dgr)) {
+                    print_error("?? erro ao criar grupo");
                 }
             }
-            echo "   -- inserindo membros: ";
-            foreach($members AS $member) {
-                if (!$DB->get_field('groups_members', 'id', array('groupid'=>$dgr->id, 'userid'=>$member->userid))) {
-                    if ($DB->get_field('role_assignments', 'id', array('contextid'=>$cdest->contextid, 'userid'=>$member->userid))) {
-                        groups_add_member($dgr->id, $member->userid);
-                        echo $member->userid . ', ';
+            $trace->output("inserindo membros: ");
+            foreach ($members as $userid => $memberid) {
+
+                if (!$DB->get_field('groups_members', 'id', array('groupid'=>$dgr->id, 'userid'=>$userid))) {
+                    if ($DB->get_field('role_assignments', 'id', array('contextid'=>$dest->context->id, 'userid'=>$userid))) {
+                        groups_add_member($dgr->id, $userid);
+                        $trace->output('Usuário inserido no grupo: '.$userid);
                     } else {
-                        echo "\t?? usuario id: {$member->userid} não matriculado no curso\n";
+                        $trace->output("?? usuario id: {$userid} não inscrito no curso");
                     }
                 }
             }
-            echo "\n";
 
-            echo "   -- removendo membros: ";
+            $trace->output("removendo membros: ");
             $members_dest = $DB->get_records('groups_members', array('groupid'=>$dgr->id), '', 'id, groupid, userid');
-            foreach($members_dest AS $id=>$usum) {
-                if(!isset($userids_members[$usum->userid])) {
+            foreach ($members_dest as $id=>$usum) {
+                if (!isset($members[$usum->userid])) {
                     groups_remove_member($dgr->id, $usum->userid);
-                    echo $usum->userid . ', ';
+                    $trace->output('Usuário removido do grupo: '.$usum->userid);
                 }
             }
-            echo "\n";
         }
     }
+    $trace->output('Concluído.');
+    $trace->finished();
 }
