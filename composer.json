@@ -1,0 +1,12 @@
+{
+    "name": "moodle-ufsc/local_syncgroups",
+    "description": "sincroniza os membros de grupos entre grupos de dois cursos",
+    "license": "GPLv3",
+    "type": "moodle-local",
+    "require": {
+      "composer/installers": "~1.0"
+    },
+    "extra": {
+      "installer-name": "syncgroups"
+    }
+}
