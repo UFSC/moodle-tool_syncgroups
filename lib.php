@@ -24,7 +24,7 @@
 require_once($CFG->dirroot . '/group/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-function local_syncgroups_extends_settings_navigation(settings_navigation $nav, context $context = null) {
+function local_syncgroups_extend_settings_navigation(settings_navigation $nav, context $context = null) {
     global $PAGE;
 
     // Only add this settings item on non-site course pages.
