@@ -13,6 +13,5 @@ Install
 * Put these files at moodle/local/syncgroups/
  *  You may use composer
  *   or git clone
- *   or download the latest version from https://github.com/danielneis/moodle-availability_maxviews/archive/master.zip
 * Log in your Moodle as Admin and go to "Notifications" page
 * Follow the instructions to install the plugin
