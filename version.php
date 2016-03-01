@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2014041601;
-$plugin->release   = '1.0';
+$plugin->version   = 2016030100;
+$plugin->release   = '2';
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->requires  = 2013111803; // Moodle 2.6 release and upwards
 $plugin->component = 'local_syncgroups';
