@@ -21,7 +21,18 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['addingmembers'] = 'Adding members';
+$string['done'] = 'Done';
+$string['error'] = 'something went wrong';
+$string['groupcreated'] = 'Group created';
+$string['groupexists'] = 'Group exists';
+$string['intro'] = 'With this tool you can mirror the groups and groups members from this course to other courses you can edit.';
+$string['memberadded'] = 'Group member added (userid: {$a})';
+$string['memberremoved'] = 'Group member removed (userid: {$a})';
+$string['nogroups'] = 'There are no groups in this course. You must create some groups before using this tool.';
 $string['pluginname'] = 'Synchronize groups';
-$string['syncgroupsto'] = 'Select courses to synchronize to';
-$string['selectgroups'] = 'Select groups you want to synchronize';
-$string['sync'] = 'Sinchronize';
+$string['removingmembers'] = 'Removing members';
+$string['selectgroups'] = 'Select groups from this course you want to synchronize';
+$string['sync'] = 'Synchronize';
+$string['syncgroupsto'] = 'Select the target courses to synchronize groups to';
+$string['usernotenrolled'] = 'User not enrolled (userid: {$a})';

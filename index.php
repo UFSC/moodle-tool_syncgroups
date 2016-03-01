@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details.
+ * List groups from currente course and courses that user can manage groups.
  *
  * @package    local_syncgroups
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -38,16 +38,13 @@ $url = new moodle_url('/local/syncgroups/index.php', array('courseid'=>$courseid
 
 $PAGE->set_url($url);
 
-// Make sure that the user has permissions to manage groups.
 require_login($course);
 
 $context = context_course::instance($course->id);
 require_capability('moodle/course:managegroups', $context);
 
-// Print the page and form
 $strsyncgroups = get_string('pluginname', 'local_syncgroups');
 
-/// Print header
 $PAGE->set_title($strsyncgroups);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('standard');
@@ -57,40 +54,46 @@ echo $OUTPUT->heading(get_string('pluginname', 'local_syncgroups'));
 
 if (!$searchcourses && !empty($groups) && !empty($destinations)) {
 
-        $erro = false;
-        if ($origem = get_course($courseid)) {
+    $error = false;
+    if ($origem = get_course($courseid)) {
 
-            list($in_or_equal, $groupparams) = $DB->get_in_or_equal($groups);
-            if (!$groups_to_sync = $DB->get_records_select('groups', "courseid = ? AND id {$in_or_equal}",
-                                                      array_merge(array($courseid),$groupparams))) {
-                $erro = true;
-            }
-        } else {
-            $erro = true;
+        list($in_or_equal, $groupparams) = $DB->get_in_or_equal($groups);
+        if (!$groups_to_sync = $DB->get_records_select('groups', "courseid = ? AND id {$in_or_equal}",
+                                                  array_merge(array($courseid),$groupparams))) {
+            $error = true;
         }
+    } else {
+        $error = true;
+    }
 
-        $courses_to_sync = array();
-        foreach($destinations as $dest) {
-            if ($cdest = get_course($dest)) {
-                $cdest->context = context_course::instance($dest);
+    $courses_to_sync = array();
+    foreach ($destinations as $dest) {
+        if ($cdest = get_course($dest)) {
+            $cdest->context = context_course::instance($dest);
+            if (has_capability('moodle/course:managegroups', $cdest->context)) {
                 $courses_to_sync[] = $cdest;
-            } else {
-                $erro = true;
             }
-        }
-
-        if ($erro) {
-            print_error('something went wrong');
         } else {
-            $trace = new html_list_progress_trace();
-            local_syncgroups_do_sync($groups_to_sync, $courses_to_sync, $trace);
-            echo html_writer::link($url, get_string('back'));
+            $error = true;
         }
+    }
+
+    if ($error) {
+        print_error(get_string('error', 'local_syncgroups'));
+    } else {
+        $trace = new html_list_progress_trace();
+        local_syncgroups_do_sync($groups_to_sync, $courses_to_sync, $trace);
+        echo html_writer::link($url, get_string('back'));
+    }
+
 } else {
 
-    $search = new destination_courses_search(array('url'=>$url), $courseid);
+    echo html_writer::tag('p', get_string('intro', 'local_syncgroups'));
+
+    $search = new destination_courses_search(array('url' => $url), $courseid);
 
     $renderer = $PAGE->get_renderer('local_syncgroups');
+
     echo $renderer->destination_courses_selector($url, $search, $courseid);
 }
 echo $OUTPUT->footer();

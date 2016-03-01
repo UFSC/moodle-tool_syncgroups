@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details.
+ * Helper functions for local_syncgroups.
  *
  * @package    local_syncgroups
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -52,7 +52,7 @@ function local_syncgroups_do_sync($groups, $destinations, $trace) {
 
     foreach ($groups as $group) {
 
-        $trace->output('Grupo: '.$group->name);
+        $trace->output(get_string('group') . ': ' . $group->name);
 
         if (!$members = $DB->get_records_menu('groups_members', array('groupid'=>$group->id), '', 'userid, id')) {
             $trace->output('group with no members, skipping');
@@ -61,11 +61,11 @@ function local_syncgroups_do_sync($groups, $destinations, $trace) {
 
         foreach($destinations as $dest) {
 
-            $trace->output("Curso: {$dest->shortname}");
+            $trace->output(get_string('course') . ': ' . $dest->shortname);
             if ($dgr = $DB->get_record('groups', array('courseid'=>$dest->id, 'name'=>$group->name), 'id, courseid, idnumber, name')) {
-                $trace->output('grupo existente');
+                $trace->output(get_string('groupexists', 'local_syncgroups'));
             } else {
-                $trace->output("criado grupo");
+                $trace->output(get_string('groupcreated', 'local_syncgroups'));
                 $dgr = new Stdclass();
                 $dgr->courseid     = $dest->id;
                 $dgr->timecreated  = time();
@@ -74,32 +74,32 @@ function local_syncgroups_do_sync($groups, $destinations, $trace) {
                 $dgr->description  = $group->description;
                 $dgr->descriptionformat = $group->descriptionformat;
                 if (!$dgr->id = groups_create_group($dgr)) {
-                    print_error("?? erro ao criar grupo");
+                    print_error(get_string('error', 'local_syncgrouops'));
                 }
             }
-            $trace->output("inserindo membros: ");
+            $trace->output(get_string('addingmembers', 'local_syncgroups'));
             foreach ($members as $userid => $memberid) {
 
                 if (!$DB->get_field('groups_members', 'id', array('groupid'=>$dgr->id, 'userid'=>$userid))) {
                     if ($DB->get_field('role_assignments', 'id', array('contextid'=>$dest->context->id, 'userid'=>$userid))) {
                         groups_add_member($dgr->id, $userid);
-                        $trace->output('Usuário inserido no grupo: '.$userid);
+                        $trace->output(get_string('memberadded', 'local_syncgroups', $userid));
                     } else {
-                        $trace->output("?? usuario id: {$userid} não inscrito no curso");
+                        $trace->output(get_string('usernotenrolled', 'local_syncgroups', $userid));
                     }
                 }
             }
 
-            $trace->output("removendo membros: ");
+            $trace->output(get_string('removingmembers', "local_syncgroups"));
             $members_dest = $DB->get_records('groups_members', array('groupid'=>$dgr->id), '', 'id, groupid, userid');
             foreach ($members_dest as $id=>$usum) {
                 if (!isset($members[$usum->userid])) {
                     groups_remove_member($dgr->id, $usum->userid);
-                    $trace->output('Usuário removido do grupo: '.$usum->userid);
+                    $trace->output(get_string('memberremoved', 'local_syncgroups', $usum->userid));
                 }
             }
         }
     }
-    $trace->output('Concluído.');
+    $trace->output(get_string('done', 'local_syncgroups'));
     $trace->finished();
 }
