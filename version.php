@@ -17,14 +17,14 @@
 /**
  * Version details.
  *
- * @package    local_syncgroups
+ * @package    tool_syncgroups
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2016030100;
-$plugin->release   = '2';
+$plugin->version   = 2016032200;
+$plugin->release   = '3';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->requires  = 2013111803; // Moodle 2.6 release and upwards
-$plugin->component = 'local_syncgroups';
+$plugin->requires  = 2015051100; // Moodle 2.9 release and upwards
+$plugin->component = 'tool_syncgroups';

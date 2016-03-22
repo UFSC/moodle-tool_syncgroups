@@ -17,15 +17,15 @@
 /**
  * List groups from currente course and courses that user can manage groups.
  *
- * @package    local_syncgroups
+ * @package    tool_syncgroups
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require('../../config.php');
 require("{$CFG->dirroot}/group/lib.php");
-require("{$CFG->dirroot}/local/syncgroups/lib.php");
-require("{$CFG->dirroot}/local/syncgroups/ui/renderer.php");
-require("{$CFG->dirroot}/local/syncgroups/ui/components.php");
+require("{$CFG->dirroot}/admin/tool/syncgroups/lib.php");
+require("{$CFG->dirroot}/admin/tool/syncgroups/ui/renderer.php");
+require("{$CFG->dirroot}/admin/tool/syncgroups/ui/components.php");
 
 $courseid = required_param('courseid', PARAM_INT);
 $groups = optional_param_array('groups', 0, PARAM_INT);
@@ -34,7 +34,7 @@ $searchcourses = optional_param('searchcourses', false, PARAM_BOOL);
 
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 
-$url = new moodle_url('/local/syncgroups/index.php', array('courseid'=>$courseid));
+$url = new moodle_url('/admin/tool/syncgroups/index.php', array('courseid'=>$courseid));
 
 $PAGE->set_url($url);
 
@@ -43,14 +43,14 @@ require_login($course);
 $context = context_course::instance($course->id);
 require_capability('moodle/course:managegroups', $context);
 
-$strsyncgroups = get_string('pluginname', 'local_syncgroups');
+$strsyncgroups = get_string('pluginname', 'tool_syncgroups');
 
 $PAGE->set_title($strsyncgroups);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('standard');
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('pluginname', 'local_syncgroups'));
+echo $OUTPUT->heading(get_string('pluginname', 'tool_syncgroups'));
 
 if (!$searchcourses && !empty($groups) && !empty($destinations)) {
 
@@ -79,20 +79,20 @@ if (!$searchcourses && !empty($groups) && !empty($destinations)) {
     }
 
     if ($error) {
-        print_error(get_string('error', 'local_syncgroups'));
+        print_error(get_string('error', 'tool_syncgroups'));
     } else {
         $trace = new html_list_progress_trace();
-        local_syncgroups_do_sync($groups_to_sync, $courses_to_sync, $trace);
+        tool_syncgroups_do_sync($groups_to_sync, $courses_to_sync, $trace);
         echo html_writer::link($url, get_string('back'));
     }
 
 } else {
 
-    echo html_writer::tag('p', get_string('intro', 'local_syncgroups'));
+    echo html_writer::tag('p', get_string('intro', 'tool_syncgroups'));
 
     $search = new destination_courses_search(array('url' => $url), $courseid);
 
-    $renderer = $PAGE->get_renderer('local_syncgroups');
+    $renderer = $PAGE->get_renderer('tool_syncgroups');
 
     echo $renderer->destination_courses_selector($url, $search, $courseid);
 }

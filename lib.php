@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Helper functions for local_syncgroups.
+ * Helper functions for tool_syncgroups.
  *
- * @package    local_syncgroups
+ * @package    tool_syncgroups
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once($CFG->dirroot . '/group/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-function local_syncgroups_extend_settings_navigation(settings_navigation $nav, context $context = null) {
+function tool_syncgroups_extend_settings_navigation(settings_navigation $nav, context $context = null) {
     global $PAGE;
 
     // Only add this settings item on non-site course pages.
@@ -35,9 +35,9 @@ function local_syncgroups_extend_settings_navigation(settings_navigation $nav, c
 
         if ($usersnode = $coursenode->get('users')) {
 
-            $str = get_string('pluginname', 'local_syncgroups');
-            $url = new moodle_url('/local/syncgroups/index.php', array('courseid' => $context->instanceid));
-            $node = navigation_node::create($str, $url, navigation_node::NODETYPE_LEAF, 'local_syncgroups', 'local_syncgroups');
+            $str = get_string('pluginname', 'tool_syncgroups');
+            $url = new moodle_url('/admin/tool/syncgroups/index.php', array('courseid' => $context->instanceid));
+            $node = navigation_node::create($str, $url, navigation_node::NODETYPE_LEAF, 'tool_syncgroups', 'tool_syncgroups');
 
             if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
                 $node->make_active();
@@ -47,7 +47,7 @@ function local_syncgroups_extend_settings_navigation(settings_navigation $nav, c
     }
 }
 
-function local_syncgroups_do_sync($groups, $destinations, $trace) {
+function tool_syncgroups_do_sync($groups, $destinations, $trace) {
     global $DB;
 
     foreach ($groups as $group) {
@@ -63,9 +63,9 @@ function local_syncgroups_do_sync($groups, $destinations, $trace) {
 
             $trace->output(get_string('course') . ': ' . $dest->shortname);
             if ($dgr = $DB->get_record('groups', array('courseid'=>$dest->id, 'name'=>$group->name), 'id, courseid, idnumber, name')) {
-                $trace->output(get_string('groupexists', 'local_syncgroups'));
+                $trace->output(get_string('groupexists', 'tool_syncgroups'));
             } else {
-                $trace->output(get_string('groupcreated', 'local_syncgroups'));
+                $trace->output(get_string('groupcreated', 'tool_syncgroups'));
                 $dgr = new Stdclass();
                 $dgr->courseid     = $dest->id;
                 $dgr->timecreated  = time();
@@ -74,32 +74,32 @@ function local_syncgroups_do_sync($groups, $destinations, $trace) {
                 $dgr->description  = $group->description;
                 $dgr->descriptionformat = $group->descriptionformat;
                 if (!$dgr->id = groups_create_group($dgr)) {
-                    print_error(get_string('error', 'local_syncgrouops'));
+                    print_error(get_string('error', 'tool_syncgrouops'));
                 }
             }
-            $trace->output(get_string('addingmembers', 'local_syncgroups'));
+            $trace->output(get_string('addingmembers', 'tool_syncgroups'));
             foreach ($members as $userid => $memberid) {
 
                 if (!$DB->get_field('groups_members', 'id', array('groupid'=>$dgr->id, 'userid'=>$userid))) {
                     if ($DB->get_field('role_assignments', 'id', array('contextid'=>$dest->context->id, 'userid'=>$userid))) {
                         groups_add_member($dgr->id, $userid);
-                        $trace->output(get_string('memberadded', 'local_syncgroups', $userid));
+                        $trace->output(get_string('memberadded', 'tool_syncgroups', $userid));
                     } else {
-                        $trace->output(get_string('usernotenrolled', 'local_syncgroups', $userid));
+                        $trace->output(get_string('usernotenrolled', 'tool_syncgroups', $userid));
                     }
                 }
             }
 
-            $trace->output(get_string('removingmembers', "local_syncgroups"));
+            $trace->output(get_string('removingmembers', "tool_syncgroups"));
             $members_dest = $DB->get_records('groups_members', array('groupid'=>$dgr->id), '', 'id, groupid, userid');
             foreach ($members_dest as $id=>$usum) {
                 if (!isset($members[$usum->userid])) {
                     groups_remove_member($dgr->id, $usum->userid);
-                    $trace->output(get_string('memberremoved', 'local_syncgroups', $usum->userid));
+                    $trace->output(get_string('memberremoved', 'tool_syncgroups', $usum->userid));
                 }
             }
         }
     }
-    $trace->output(get_string('done', 'local_syncgroups'));
+    $trace->output(get_string('done', 'tool_syncgroups'));
     $trace->finished();
 }
