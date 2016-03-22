@@ -21,7 +21,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require('../../config.php');
+require('../../../config.php');
 require("{$CFG->dirroot}/group/lib.php");
 require("{$CFG->dirroot}/admin/tool/syncgroups/lib.php");
 require("{$CFG->dirroot}/admin/tool/syncgroups/ui/renderer.php");
