@@ -62,10 +62,13 @@ function tool_syncgroups_do_sync($groups, $destinations, $trace) {
         foreach($destinations as $dest) {
 
             $trace->output(get_string('course') . ': ' . $dest->shortname);
+
             if ($dgr = $DB->get_record('groups', array('courseid'=>$dest->id, 'name'=>$group->name), 'id, courseid, idnumber, name')) {
+
                 $trace->output(get_string('groupexists', 'tool_syncgroups'));
+
             } else {
-                $trace->output(get_string('groupcreated', 'tool_syncgroups'));
+
                 $dgr = new Stdclass();
                 $dgr->courseid     = $dest->id;
                 $dgr->timecreated  = time();
@@ -73,20 +76,21 @@ function tool_syncgroups_do_sync($groups, $destinations, $trace) {
                 $dgr->name         = $group->name;
                 $dgr->description  = $group->description;
                 $dgr->descriptionformat = $group->descriptionformat;
-                if (!$dgr->id = groups_create_group($dgr)) {
+                if ($dgr->id = groups_create_group($dgr)) {
+                    $trace->output(get_string('groupcreated', 'tool_syncgroups'));
+                } else {
                     print_error(get_string('error', 'tool_syncgrouops'));
                 }
             }
+
             $trace->output(get_string('addingmembers', 'tool_syncgroups'));
+
             foreach ($members as $userid => $memberid) {
 
-                if (!$DB->get_field('groups_members', 'id', array('groupid'=>$dgr->id, 'userid'=>$userid))) {
-                    if ($DB->get_field('role_assignments', 'id', array('contextid'=>$dest->context->id, 'userid'=>$userid))) {
-                        groups_add_member($dgr->id, $userid);
-                        $trace->output(get_string('memberadded', 'tool_syncgroups', $userid));
-                    } else {
-                        $trace->output(get_string('usernotenrolled', 'tool_syncgroups', $userid));
-                    }
+                if (groups_add_member($dgr->id, $userid)) {
+                    $trace->output(get_string('memberadded', 'tool_syncgroups', $userid));
+                } else {
+                    $trace->output(get_string('usernotenrolled', 'tool_syncgroups', $userid));
                 }
             }
 
