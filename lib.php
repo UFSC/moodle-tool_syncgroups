@@ -24,26 +24,24 @@
 require_once($CFG->dirroot . '/group/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-function tool_syncgroups_extend_settings_navigation(settings_navigation $nav, context $context = null) {
+function tool_syncgroups_extend_navigation_course($navigation, $course, context $context = null) {
     global $PAGE;
 
     // Only add this settings item on non-site course pages.
     if (!$PAGE->course or $PAGE->course->id == 1) {
         return;
     }
-    if ($coursenode = $nav->get('courseadmin')) {
 
-        if ($usersnode = $coursenode->get('users')) {
+    if ($usersnode = $navigation->get('users')) {
 
-            $str = get_string('pluginname', 'tool_syncgroups');
-            $url = new moodle_url('/admin/tool/syncgroups/index.php', array('courseid' => $context->instanceid));
-            $node = navigation_node::create($str, $url, navigation_node::NODETYPE_LEAF, 'tool_syncgroups', 'tool_syncgroups');
+        $str = get_string('pluginname', 'tool_syncgroups');
+        $url = new moodle_url('/admin/tool/syncgroups/index.php', array('courseid' => $context->instanceid));
+        $node = navigation_node::create($str, $url, navigation_node::NODETYPE_LEAF, 'tool_syncgroups', 'tool_syncgroups');
 
-            if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
-                $node->make_active();
-            }
-            $usersnode->add_node($node, 'override');
+        if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
+            $node->make_active();
         }
+        $usersnode->add_node($node, 'override');
     }
 }
 
