@@ -1,4 +1,4 @@
-Copy groups between courses Plugin for Moodle
+Copy groups and members between courses Plugin for Moodle
 ---------------------------------------------------
 
 With this plugin you can synchronize groups and groups members between two courses,
@@ -15,3 +15,9 @@ Install
  * or download the latest version from https://gitlab.setic.ufsc.br/moodle-ufsc/moodle-tool_syncgroups/repository/archive.zip
 * Log in your Moodle as Admin and go to "Notifications" page
 * Follow the instructions to install the plugin
+
+Usage
+-----
+
+After installing the plugin there will be a new link "Synchronize groups" under Course Administration > Users on the Administration block.
+Clicking that link will show a page for you to select the groups from current course you want to copy members to which target courses.
