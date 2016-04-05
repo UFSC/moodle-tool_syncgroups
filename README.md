@@ -1,4 +1,4 @@
-Copy groups between courses Plugin for Moodle
+Copy groups and members between courses Plugin for Moodle
 ---------------------------------------------------
 
 With this plugin you can synchronize groups and groups members between two courses,
