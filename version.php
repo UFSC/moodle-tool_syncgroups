@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2016032200;
-$plugin->release   = '3';
+$plugin->version   = 2016040500;
+$plugin->release   = '4';
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->requires  = 2015051100; // Moodle 2.9 release and upwards
 $plugin->component = 'tool_syncgroups';
