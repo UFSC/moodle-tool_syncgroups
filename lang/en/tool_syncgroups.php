@@ -18,6 +18,7 @@
  * Language strings
  *
  * @package    tool_syncgroups
+ * @copyright  Daniel Neis Araujo <danielneis@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

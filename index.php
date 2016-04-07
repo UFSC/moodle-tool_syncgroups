@@ -18,6 +18,7 @@
  * List groups from currente course and courses that user can manage groups.
  *
  * @package    tool_syncgroups
+ * @copyright  Daniel Neis Araujo <danielneis@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,9 +33,9 @@ $groups = optional_param_array('groups', 0, PARAM_INT);
 $destinations = optional_param_array('destinations', 0, PARAM_INT);
 $searchcourses = optional_param('searchcourses', false, PARAM_BOOL);
 
-$course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 
-$url = new moodle_url('/admin/tool/syncgroups/index.php', array('courseid'=>$courseid));
+$url = new moodle_url('/admin/tool/syncgroups/index.php', array('courseid' => $courseid));
 
 $PAGE->set_url($url);
 
@@ -59,7 +60,7 @@ if (!$searchcourses && !empty($groups) && !empty($destinations)) {
 
         list($in_or_equal, $groupparams) = $DB->get_in_or_equal($groups);
         if (!$groups_to_sync = $DB->get_records_select('groups', "courseid = ? AND id {$in_or_equal}",
-                                                  array_merge(array($courseid),$groupparams))) {
+                                                  array_merge(array($courseid), $groupparams))) {
             $error = true;
         }
     } else {

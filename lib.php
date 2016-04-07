@@ -18,6 +18,7 @@
  * Helper functions for tool_syncgroups.
  *
  * @package    tool_syncgroups
+ * @copyright  Daniel Neis Araujo <danielneis@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -52,16 +53,16 @@ function tool_syncgroups_do_sync($groups, $destinations, $trace) {
 
         $trace->output(get_string('group') . ': ' . $group->name);
 
-        if (!$members = $DB->get_records_menu('groups_members', array('groupid'=>$group->id), '', 'userid, id')) {
+        if (!$members = $DB->get_records_menu('groups_members', array('groupid' => $group->id), '', 'userid, id')) {
             $trace->output('group with no members, skipping');
             continue;
         }
 
-        foreach($destinations as $dest) {
+        foreach ($destinations as $dest) {
 
             $trace->output(get_string('course') . ': ' . $dest->shortname);
 
-            if ($dgr = $DB->get_record('groups', array('courseid'=>$dest->id, 'name'=>$group->name), 'id, courseid, idnumber, name')) {
+            if ($dgr = $DB->get_record('groups', array('courseid' => $dest->id, 'name' => $group->name), 'id, courseid, idnumber, name')) {
 
                 $trace->output(get_string('groupexists', 'tool_syncgroups'));
 
@@ -93,8 +94,8 @@ function tool_syncgroups_do_sync($groups, $destinations, $trace) {
             }
 
             $trace->output(get_string('removingmembers', "tool_syncgroups"));
-            $members_dest = $DB->get_records('groups_members', array('groupid'=>$dgr->id), '', 'id, groupid, userid');
-            foreach ($members_dest as $id=>$usum) {
+            $members_dest = $DB->get_records('groups_members', array('groupid' => $dgr->id), '', 'id, groupid, userid');
+            foreach ($members_dest as $id => $usum) {
                 if (!isset($members[$usum->userid])) {
                     groups_remove_member($dgr->id, $usum->userid);
                     $trace->output(get_string('memberremoved', 'tool_syncgroups', $usum->userid));

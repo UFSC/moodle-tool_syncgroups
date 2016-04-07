@@ -18,6 +18,7 @@
  * Version details.
  *
  * @package    tool_syncgroups
+ * @copyright  Daniel Neis Araujo <danielneis@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,5 +27,5 @@ defined('MOODLE_INTERNAL') || die;
 $plugin->version   = 2016040500;
 $plugin->release   = '4';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->requires  = 2015041700; // Moodle 2.9 release and upwards
+$plugin->requires  = 2015041700;
 $plugin->component = 'tool_syncgroups';

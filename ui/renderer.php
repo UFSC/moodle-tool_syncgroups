@@ -45,7 +45,7 @@ class tool_syncgroups_renderer extends core_backup_renderer {
                     $row->attributes['class'] .= ' dimmed';
                 }
                 $row->cells = array(
-                    html_writer::empty_tag('input', array('type'=>'checkbox', 'name'=>'destinations[]', 'value'=>$course->id)),
+                    html_writer::empty_tag('input', array('type' => 'checkbox', 'name' => 'destinations[]', 'value' => $course->id)),
                     format_string($course->shortname, true, array('context' => context_course::instance($course->id))),
                     format_string($course->fullname, true, array('context' => context_course::instance($course->id)))
                 );
@@ -70,9 +70,9 @@ class tool_syncgroups_renderer extends core_backup_renderer {
         $output .= html_writer::table($table);
         $output .= html_writer::end_tag('div');
 
-        $output .= html_writer::start_tag('div', array('class'=>'rcs-search'));
-        $output .= html_writer::empty_tag('input', array('type'=>'text', 'name'=>restore_course_search::$VAR_SEARCH, 'value'=>$component->get_search()));
-        $output .= html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'searchcourses', 'value'=>get_string('search')));
+        $output .= html_writer::start_tag('div', array('class' => 'rcs-search'));
+        $output .= html_writer::empty_tag('input', array('type' => 'text', 'name' => restore_course_search::$VAR_SEARCH, 'value' => $component->get_search()));
+        $output .= html_writer::empty_tag('input', array('type' => 'submit', 'name' => 'searchcourses', 'value' => get_string('search')));
         $output .= html_writer::end_tag('div');
 
         $output .= html_writer::end_tag('div');
@@ -81,14 +81,14 @@ class tool_syncgroups_renderer extends core_backup_renderer {
 
     public function destination_courses_selector(moodle_url $nextstageurl, destination_courses_search $courses=null, $courseid) {
 
-        $html  = html_writer::start_tag('div', array('class'=>'import-course-selector backup-restore'));
-        $html .= html_writer::start_tag('form', array('method'=>'post', 'action'=>$nextstageurl->out_omit_querystring()));
-        foreach ($nextstageurl->params() as $key=>$value) {
-            $html .= html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>$key, 'value'=>$value));
+        $html  = html_writer::start_tag('div', array('class' => 'import-course-selector backup-restore'));
+        $html .= html_writer::start_tag('form', array('method' => 'post', 'action' => $nextstageurl->out_omit_querystring()));
+        foreach ($nextstageurl->params() as $key => $value) {
+            $html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => $key, 'value' => $value));
         }
 
-        $html .= html_writer::start_tag('div', array('class'=>'ics-existing-group backup-section'));
-        $html .= $this->output->heading(get_string('selectgroups', 'tool_syncgroups'), 2, array('class'=>'header'));
+        $html .= html_writer::start_tag('div', array('class' => 'ics-existing-group backup-section'));
+        $html .= $this->output->heading(get_string('selectgroups', 'tool_syncgroups'), 2, array('class' => 'header'));
         if ($groups = groups_get_all_groups($courseid, 0, 0, 'g.id, g.name')) {
 
             $html .= html_writer::start_tag('ul');
@@ -104,11 +104,11 @@ class tool_syncgroups_renderer extends core_backup_renderer {
         $html .= html_writer::end_tag('div');
 
         // We only allow import adding for now. Enforce it here.
-        $html .= html_writer::start_tag('div', array('class'=>'ics-existing-course backup-section'));
-        $html .= $this->output->heading(get_string('syncgroupsto', 'tool_syncgroups'), 2, array('class'=>'header'));
+        $html .= html_writer::start_tag('div', array('class' => 'ics-existing-course backup-section'));
+        $html .= $this->output->heading(get_string('syncgroupsto', 'tool_syncgroups'), 2, array('class' => 'header'));
         $html .= $this->backup_detail_pair(get_string('selectacourse', 'backup'), $this->render($courses));
         if ($groups) {
-            $html .= $this->backup_detail_pair('', html_writer::empty_tag('input', array('type'=>'submit', 'value'=>get_string('continue'))));
+            $html .= $this->backup_detail_pair('', html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('continue'))));
         } else {
             $html .= $this->backup_detail_pair('', html_writer::empty_tag('input', array('type'=>'submit', 'value'=>get_string('continue'), 'disabled' => 'disabled')));
         }
