@@ -44,6 +44,11 @@ require_login($course);
 $context = context_course::instance($course->id);
 require_capability('moodle/course:managegroups', $context);
 
+$dosync = !$searchcourses && !empty($groups) && !empty($destinations);
+if ($dosync) {
+    require_sesskey();
+}
+
 $strsyncgroups = get_string('pluginname', 'tool_syncgroups');
 
 $PAGE->set_title($strsyncgroups);
@@ -53,7 +58,7 @@ $PAGE->set_pagelayout('standard');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('pluginname', 'tool_syncgroups'));
 
-if (!$searchcourses && !empty($groups) && !empty($destinations)) {
+if ($dosync) {
 
     $error = false;
     if ($origem = get_course($courseid)) {
